@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import SearchableSelect from '../../components/common/SearchableSelect';
@@ -13,7 +14,7 @@ import ItemFormModal from '../ItemFormModal';
 import { useToast } from '../../context/ToastContext';
 import { fetchParties, createParty } from '../../services/partyService';
 import { fetchItems, createItem } from '../../services/itemService';
-import { createPurchase } from '../../services/purchaseService';
+import { createPurchase, fetchPurchaseById, updatePurchase } from '../../services/purchaseService';
 import { extractErrorMessage } from '../../services/api';
 import { UNIT_OPTIONS } from '../../config/units';
 import {
@@ -99,6 +100,10 @@ function addDays(dateString, daysValue) {
 
 export default function PurchaseEntry() {
   const toast = useToast();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  const loadedEditId = useRef(null);
 
   const [parties, setParties] = useState([]);
   const [itemRecords, setItemRecords] = useState([]);
@@ -113,6 +118,7 @@ export default function PurchaseEntry() {
   const [submittingParty, setSubmittingParty] = useState(false);
   const [submittingItem, setSubmittingItem] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingPurchase, setLoadingPurchase] = useState(false);
 
   const loadParties = () => (
     fetchParties({ search: '' })
@@ -131,6 +137,59 @@ export default function PurchaseEntry() {
     loadItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+
+  useEffect(() => {
+    if (!editId || !parties.length || loadedEditId.current === editId) return;
+
+    setLoadingPurchase(true);
+    fetchPurchaseById(editId)
+      .then((purchase) => {
+        const selectedParty = parties.find((party) => party.id === purchase.party_id);
+
+        setDetails({
+          party_id: purchase.party_id,
+          bill_no: purchase.bill_no || '',
+          order_no: purchase.order_no || '',
+          bill_date: purchase.bill_date || today(),
+          due_term: purchase.due_term ?? '',
+          due_date: purchase.due_date || '',
+          is_gst: purchase.is_gst !== false,
+          address: selectedParty?.address || '',
+          city: selectedParty?.city || '',
+          party_state: selectedParty?.state || '',
+          contact_no: purchase.contact_no || (
+            selectedParty
+              ? `${selectedParty.country_code || ''} ${selectedParty.mobile || ''}`.trim()
+              : ''
+          ),
+          email: purchase.email || selectedParty?.email || '',
+          done_by: purchase.done_by || '',
+          brokerage: purchase.brokerage ?? 0,
+          broker_remarks: purchase.broker_remarks || '',
+          delivery_date: purchase.delivery_date || '',
+          ship_to: purchase.ship_to || '',
+          ship_to_address: purchase.ship_to_address || '',
+          ship_state: purchase.state || '',
+          transport: purchase.transport || '',
+          reference: purchase.reference || '',
+          remarks: purchase.remarks || '',
+          show_shipping_address_on_bill: Boolean(purchase.show_shipping_address_on_bill),
+        });
+
+        setItems((purchase.items || []).map((item) => ({
+          ...item,
+          _rowId: ++rowCounter,
+        })));
+
+        loadedEditId.current = editId;
+      })
+      .catch((error) => {
+        toast.error(extractErrorMessage(error));
+        navigate('/purchase-history');
+      })
+      .finally(() => setLoadingPurchase(false));
+  }, [editId, parties, navigate, toast]);
 
   const partyOptions = useMemo(
     () => parties.map((party) => ({
@@ -444,10 +503,23 @@ export default function PurchaseEntry() {
 
     setSaving(true);
 
-    createPurchase(payload)
-      .then((created) => {
-        toast.success(`Purchase saved successfully. Bill No. ${created.bill_no}`);
-        clearAll();
+    const request = editId
+      ? updatePurchase(editId, payload)
+      : createPurchase(payload);
+
+    request
+      .then((savedPurchase) => {
+        toast.success(
+          editId
+            ? `Purchase updated successfully. Bill No. ${savedPurchase.bill_no}`
+            : `Purchase saved successfully. Bill No. ${savedPurchase.bill_no}`,
+        );
+
+        if (editId) {
+          navigate('/purchase-history');
+        } else {
+          clearAll();
+        }
       })
       .catch((error) => toast.error(extractErrorMessage(error)))
       .finally(() => setSaving(false));
@@ -457,11 +529,15 @@ export default function PurchaseEntry() {
     <div className="page general-transaction purchase-entry-final">
       <header className="gt-page-header">
         <div>
-          <h1>Purchase Entry</h1>
-          <p>Create and save a supplier purchase bill using the verified transaction layout.</p>
+          <h1>{editId ? 'Update Purchase' : 'Purchase Entry'}</h1>
+          <p>{editId ? 'Update the selected purchase bill and its transaction items.' : 'Create and save a supplier purchase bill using the verified transaction layout.'}</p>
         </div>
-        <span className="gt-status">Purchase</span>
+        <span className="gt-status">{editId ? 'Edit Purchase' : 'Purchase'}</span>
       </header>
+
+      {loadingPurchase && (
+        <div className="gt-loading-note">Loading purchase details...</div>
+      )}
 
       <Card title="Transaction Details" className="gt-card">
         <div className="gt-details-grid">
@@ -542,10 +618,11 @@ export default function PurchaseEntry() {
             onChange={(value) => changeDetail('city', value)}
           />
 
-          <FormInput
+          <FormSelect
             label="State"
-            value={details.party_state}
+            value={details.party_state || ''}
             onChange={(value) => changeDetail('party_state', value)}
+            options={STATE_OPTIONS}
           />
 
           <FormInput
@@ -854,7 +931,7 @@ export default function PurchaseEntry() {
           Clear
         </Button>
         <Button variant="primary" onClick={savePurchase} disabled={saving}>
-          {saving ? 'Saving Purchase...' : 'Save Purchase'}
+          {saving ? (editId ? 'Updating Purchase...' : 'Saving Purchase...') : (editId ? 'Update Purchase' : 'Save Purchase')}
         </Button>
       </div>
 

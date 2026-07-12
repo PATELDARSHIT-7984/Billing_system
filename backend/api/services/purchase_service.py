@@ -264,6 +264,11 @@ def get_all_purchases(db: Session, search: Optional[str] = None, skip: int = 0, 
         for purchase in purchases:
             purchase.party_name = purchase.party.name if purchase.party else "Unknown"
             purchase.item_count = len(purchase.items)
+            # Use PurchaseItem snapshot values so history remains correct
+            # even if Item Master is later edited, deactivated, or deleted.
+            purchase.item_names = [row.item_name for row in purchase.items]
+            purchase.hsn_codes = [row.hsn_code for row in purchase.items]
+            purchase.purchase_prices = [float(row.price or 0) for row in purchase.items]
         return purchases
     except Exception as error:
         traceback.print_exc()

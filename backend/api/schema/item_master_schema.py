@@ -1,171 +1,169 @@
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-
-# =====================================================
-# Create Item (Optional - mainly for future use)
-# =====================================================
 
 class ItemMasterCreate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=255)
+    code: Optional[str] = Field(default=None, max_length=100)
+    hsn_code: str = Field(..., min_length=1, max_length=50)
 
-    name: str
-
-    code: Optional[str] = None
-
-    hsn_code: str
-
-    unit: str
+    unit: str = Field(..., min_length=1, max_length=50)
 
     current_stock: float = Field(default=0.0, ge=0)
 
     purchase_price: float = Field(default=0.0, ge=0)
-
     sale_price: float = Field(default=0.0, ge=0)
-
     mrp: float = Field(default=0.0, ge=0)
 
-    gst_rate: float = Field(default=18.0, ge=0)
+    cgst: float = Field(default=9.0, ge=0, le=100)
+    sgst: float = Field(default=9.0, ge=0, le=100)
 
-    category: Optional[str] = None
-
-    brand: Optional[str] = None
-
+    category: Optional[str] = Field(default=None, max_length=150)
+    brand: Optional[str] = Field(default=None, max_length=150)
     description: Optional[str] = None
 
     last_purchase_date: Optional[date] = None
-
     last_sale_date: Optional[date] = None
 
-# =====================================================
-# Update Item
-# =====================================================
+    @field_validator(
+        "name",
+        "code",
+        "hsn_code",
+        "unit",
+        "category",
+        "brand",
+        "description",
+        mode="before"
+    )
+    @classmethod
+    def clean_text_fields(cls, value):
+        if value is None:
+            return None
+
+        if isinstance(value, str):
+            value = value.strip()
+
+            if value == "":
+                return None
+
+        return value
+
+    @field_validator("name", "hsn_code", "unit")
+    @classmethod
+    def validate_required_text(cls, value):
+        if not value:
+            raise ValueError("This field is required")
+
+        return value
+
+    @field_validator("code")
+    @classmethod
+    def normalize_code(cls, value):
+        if value:
+            return value.upper()
+
+        return value
+
+    @field_validator("hsn_code")
+    @classmethod
+    def normalize_hsn(cls, value):
+        return value.upper()
+
 
 class ItemMasterUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=2, max_length=255)
+    code: Optional[str] = Field(default=None, max_length=100)
+    hsn_code: Optional[str] = Field(default=None, min_length=1, max_length=50)
 
-    name: Optional[str] = None
-
-    code: Optional[str] = None
-
-    hsn_code: Optional[str] = None
-
-    unit: Optional[str] = None
+    unit: Optional[str] = Field(default=None, min_length=1, max_length=50)
 
     current_stock: Optional[float] = Field(default=None, ge=0)
 
     purchase_price: Optional[float] = Field(default=None, ge=0)
-
     sale_price: Optional[float] = Field(default=None, ge=0)
-
     mrp: Optional[float] = Field(default=None, ge=0)
 
-    gst_rate: Optional[float] = Field(default=None, ge=0)
+    cgst: Optional[float] = Field(default=None, ge=0, le=100)
+    sgst: Optional[float] = Field(default=None, ge=0, le=100)
 
-    category: Optional[str] = None
-
-    brand: Optional[str] = None
-
+    category: Optional[str] = Field(default=None, max_length=150)
+    brand: Optional[str] = Field(default=None, max_length=150)
     description: Optional[str] = None
 
     last_purchase_date: Optional[date] = None
-
     last_sale_date: Optional[date] = None
 
     is_active: Optional[bool] = None
 
+    @field_validator(
+        "name",
+        "code",
+        "hsn_code",
+        "unit",
+        "category",
+        "brand",
+        "description",
+        mode="before"
+    )
+    @classmethod
+    def clean_text_fields(cls, value):
+        if value is None:
+            return None
 
-# =====================================================
-# Item List (Table)
-# =====================================================
-# NOTE: added hsn_code + unit (2026-07-02). Both columns already existed on
-# ItemMaster -- this is a response-shape-only change, no migration needed.
-# Purchase Entry's item dropdown reads the list endpoint and needs these two
-# fields to auto-fill HSN/Unit when an existing item is selected; without
-# them here it could only ever auto-fill price.
+        if isinstance(value, str):
+            value = value.strip()
 
-class ItemMasterListResponse(BaseModel):
+            if value == "":
+                return None
 
-    id: int
+        return value
 
-    name: str
+    @field_validator("code")
+    @classmethod
+    def normalize_code(cls, value):
+        if value:
+            return value.upper()
 
-    code: Optional[str]
+        return value
 
-    hsn_code: Optional[str]
+    @field_validator("hsn_code")
+    @classmethod
+    def normalize_hsn(cls, value):
+        if value:
+            return value.upper()
 
-    unit: str
+        return value
 
-    brand: Optional[str]
-
-    category: Optional[str]
-
-    current_stock: float
-
-    purchase_price: float
-
-    sale_price: float
-
-    gst_rate: float
-
-    class Config:
-        from_attributes = True
-
-
-# =====================================================
-# Item Details
-# =====================================================
 
 class ItemMasterResponse(BaseModel):
-
     id: int
 
     name: str
-
-    code: Optional[str]
-
-    hsn_code: Optional[str]
+    code: Optional[str] = None
+    hsn_code: str
 
     unit: str
-
     current_stock: float
 
     purchase_price: float
-
     sale_price: float
-
     mrp: float
 
-    gst_rate: float
+    cgst: float
+    sgst: float
 
-    category: Optional[str]
+    category: Optional[str] = None
+    brand: Optional[str] = None
+    description: Optional[str] = None
 
-    brand: Optional[str]
-
-    description: Optional[str]
-
-    last_purchase_date: Optional[date]
-
-    last_sale_date: Optional[date]
+    last_purchase_date: Optional[date] = None
+    last_sale_date: Optional[date] = None
 
     is_active: bool
-
     created_at: datetime
-
     updated_at: datetime
 
     class Config:
         from_attributes = True
-
-
-# =====================================================
-# Search Item
-# =====================================================
-
-class ItemMasterSearch(BaseModel):
-
-    name: Optional[str] = None
-
-    brand: Optional[str] = None
-
-    category: Optional[str] = None

@@ -206,6 +206,9 @@ class PurchaseListResponse(BaseModel):
     party_id: int
     party_name: Optional[str] = None
     item_count: int = 0
+    item_names: List[str] = Field(default_factory=list)
+    hsn_codes: List[str] = Field(default_factory=list)
+    purchase_prices: List[float] = Field(default_factory=list)
     taxable_amount: float = 0.0
     grand_total: float = 0.0
     done_by: Optional[str] = None

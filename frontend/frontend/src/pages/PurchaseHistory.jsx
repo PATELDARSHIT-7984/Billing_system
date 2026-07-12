@@ -1,16 +1,37 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import DataTable from '../components/common/DataTable';
-import ConfirmDialog from '../components/common/ConfirmDialog';
 import PurchaseDetailModal from './PurchaseDetailModal';
 import { useToast } from '../context/ToastContext';
-import { fetchPurchases, fetchPurchaseById, deletePurchase } from '../services/purchaseService';
+import { fetchPurchases, fetchPurchaseById } from '../services/purchaseService';
 import { extractErrorMessage } from '../services/api';
 import { formatCurrency } from '../utils/calculations';
 import './PurchaseHistory.css';
 
+function renderCompactList(values, formatter = (value) => value) {
+  const safeValues = Array.isArray(values) ? values : [];
+
+  if (!safeValues.length) return <span className="purchase-history__muted">—</span>;
+
+  const visible = safeValues.slice(0, 2);
+  const remaining = safeValues.length - visible.length;
+
+  return (
+    <div className="purchase-history__list">
+      {visible.map((value, index) => (
+        <span key={`${value}-${index}`}>{formatter(value)}</span>
+      ))}
+      {remaining > 0 && (
+        <span className="purchase-history__more">+{remaining} more</span>
+      )}
+    </div>
+  );
+}
+
 export default function PurchaseHistory() {
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,10 +40,6 @@ export default function PurchaseHistory() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [purchaseToDelete, setPurchaseToDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
   const loadPurchases = useCallback((searchTerm) => {
     setLoading(true);
@@ -42,15 +59,36 @@ export default function PurchaseHistory() {
     return () => clearTimeout(timer);
   }, [search, loadPurchases]);
 
-  const COLUMNS = [
-    { key: 'bill_no', label: 'Bill No.', render: (row) => <span className="purchase-history__bill-no">#{row.bill_no}</span> },
+  const columns = [
+    {
+      key: 'bill_no',
+      label: 'Bill No.',
+      render: (row) => <span className="purchase-history__bill-no">#{row.bill_no}</span>,
+    },
     {
       key: 'bill_date',
       label: 'Bill Date',
-      render: (row) => new Date(row.bill_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      render: (row) => new Date(`${row.bill_date}T00:00:00`).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      }),
     },
     { key: 'party_name', label: 'Supplier', render: (row) => row.party_name || '—' },
-    { key: 'item_count', label: 'Items', align: 'right', render: (row) => row.item_count },
+    {
+      key: 'item_names',
+      label: 'Item Name',
+      render: (row) => renderCompactList(row.item_names),
+    },
+    {
+      key: 'hsn_codes',
+      label: 'HSN Code',
+      render: (row) => renderCompactList(row.hsn_codes),
+    },
+    {
+      key: 'purchase_prices',
+      label: 'Purchase Price',
+      align: 'right',
+      render: (row) => renderCompactList(row.purchase_prices, formatCurrency),
+    },
     {
       key: 'grand_total',
       label: 'Grand Total',
@@ -71,40 +109,26 @@ export default function PurchaseHistory() {
       .finally(() => setDetailLoading(false));
   };
 
-  const askDelete = (row) => {
-    setPurchaseToDelete(row);
-    setConfirmOpen(true);
-  };
-
-  const confirmDelete = () => {
-    setDeleting(true);
-    deletePurchase(purchaseToDelete.id)
-      .then(() => {
-        toast.success(`Bill #${purchaseToDelete.bill_no} deleted successfully.`);
-        setConfirmOpen(false);
-        setPurchaseToDelete(null);
-        loadPurchases(search);
-      })
-      .catch((err) => toast.error(extractErrorMessage(err)))
-      .finally(() => setDeleting(false));
+  const editPurchase = (row) => {
+    navigate(`/purchase-entry?edit=${row.id}`);
   };
 
   return (
     <div className="page">
       <PageHeader
         title="Purchase History"
-        subtitle="Every purchase bill you've recorded — click a row to see the full breakdown."
+        subtitle="Review every purchase bill, open its complete breakdown, or update an existing entry."
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search by bill number or supplier..."
+        searchPlaceholder="Search by bill number, order number or supplier..."
       />
 
       <DataTable
-        columns={COLUMNS}
+        columns={columns}
         rows={purchases}
         loading={loading}
         onRowClick={openDetail}
-        onDelete={askDelete}
+        onEdit={editPurchase}
         emptyMessage={search ? `No purchases match "${search}".` : 'No purchases recorded yet. Create one from Purchase Entry.'}
       />
 
@@ -113,15 +137,6 @@ export default function PurchaseHistory() {
         loading={detailLoading}
         purchase={detailData}
         onClose={() => setDetailOpen(false)}
-      />
-
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Delete Purchase"
-        message={`Are you sure you want to delete Bill #${purchaseToDelete?.bill_no}? This will also roll back the stock it added to Item Master. This cannot be undone.`}
-        loading={deleting}
-        onCancel={() => setConfirmOpen(false)}
-        onConfirm={confirmDelete}
       />
     </div>
   );
