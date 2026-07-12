@@ -1,0 +1,85 @@
+/*
+  Design tokens for Billing Management Software
+  Theme: clean white workspace, deep-blue navigation, native Windows feel
+  Font stack leads with Segoe UI so the app feels native on Windows desktops
+*/
+:root {
+  /* ---- Brand / Navigation (navy + blue) ---- */
+  --color-sidebar-bg: #0B2447;
+  --color-sidebar-bg-hover: #123268;
+  --color-sidebar-active: #1657D6;
+  --color-sidebar-text: #C6D3EA;
+  --color-sidebar-text-active: #FFFFFF;
+  --color-sidebar-border: #17335F;
+
+  /* ---- Primary blue (actions, links, accents) ---- */
+  --color-primary: #1657D6;
+  --color-primary-hover: #1249B8;
+  --color-primary-active: #0E3C99;
+  --color-primary-light: #E8F0FE;
+  --color-primary-lighter: #F3F7FE;
+
+  /* ---- Semantic ---- */
+  --color-success: #1E8E5A;
+  --color-success-bg: #E7F6EE;
+  --color-danger: #D8362F;
+  --color-danger-bg: #FCEAE9;
+  --color-warning: #B8790A;
+  --color-warning-bg: #FDF3E1;
+
+  /* ---- Neutrals / Surfaces ---- */
+  --color-bg: #F3F5F9;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #FAFBFD;
+  --color-border: #E2E6ED;
+  --color-border-strong: #CBD2DE;
+
+  /* ---- Text ---- */
+  --color-text-primary: #1B2437;
+  --color-text-secondary: #59627A;
+  --color-text-muted: #8992A6;
+  --color-text-inverse: #FFFFFF;
+
+  /* ---- Typography ---- */
+  --font-family-base: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, Roboto, Arial, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 12.5px;
+  --font-size-base: 13.5px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 22px;
+  --font-size-xxl: 26px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ---- Layout ---- */
+  --sidebar-width: 232px;
+  --sidebar-width-collapsed: 68px;
+  --navbar-height: 56px;
+
+  /* ---- Spacing scale ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* ---- Shadow ---- */
+  --shadow-sm: 0 1px 2px rgba(16, 30, 54, 0.06);
+  --shadow-md: 0 2px 8px rgba(16, 30, 54, 0.08);
+  --shadow-lg: 0 8px 24px rgba(16, 30, 54, 0.14);
+
+  /* ---- Transition ---- */
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+}

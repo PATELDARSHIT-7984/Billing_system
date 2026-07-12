@@ -1,0 +1,78 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--md {
+  height: 36px;
+  padding: 0 var(--space-4);
+  font-size: var(--font-size-base);
+}
+
+.btn--sm {
+  height: 28px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.btn__icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.05em;
+  line-height: 0;
+}
+
+/* Primary: solid blue */
+.btn--primary {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+.btn--primary:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+/* Secondary: outlined */
+.btn--secondary {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface-alt);
+  border-color: var(--color-text-muted);
+}
+
+/* Danger: solid red, used for delete confirmation */
+.btn--danger {
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+.btn--danger:hover:not(:disabled) {
+  background: #B92A24;
+}
+
+/* Ghost: for icon-only row actions */
+.btn--ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: transparent;
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-primary-lighter);
+  color: var(--color-primary);
+}

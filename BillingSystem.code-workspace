@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "BillingSystem",
+			"path": "."
+		},
+		{
+			"name": "backend",
+			"path": "../../../Downloads/billing-frontend-invoice-pdf/backend"
+		}
+	],
+	"settings": {}
+}

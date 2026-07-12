@@ -1,0 +1,15 @@
+.item-master__name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item-master__name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.item-master__code {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}

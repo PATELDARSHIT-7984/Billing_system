@@ -1,0 +1,18 @@
+/* ============ Item Entry price disclosure note ============ */
+.sales-item-entry__price-note {
+  margin: var(--space-1) 0 var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ============ Amount in words (below Grand Total) ============ */
+.bill-summary__words {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-style: italic;
+  line-height: 1.4;
+}
