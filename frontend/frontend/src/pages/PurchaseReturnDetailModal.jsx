@@ -1,0 +1,129 @@
+import Modal from '../components/common/Modal';
+import Button from '../components/common/Button';
+import { formatCurrency } from '../utils/calculations';
+import './PurchaseDetailModal.css';
+
+export default function PurchaseReturnDetailModal({
+  open,
+  loading,
+  purchaseReturn,
+  onClose,
+}) {
+  const items = purchaseReturn?.items || [];
+
+  return (
+    <Modal
+      open={open}
+      title={
+        purchaseReturn
+          ? `Purchase Return #${purchaseReturn.return_no}`
+          : 'Purchase Return Details'
+      }
+      onClose={onClose}
+      width={900}
+      footer={
+        <Button variant="secondary" onClick={onClose}>
+          Close
+        </Button>
+      }
+    >
+      {loading && (
+        <div className="purchase-detail__loading">
+          Loading purchase return...
+        </div>
+      )}
+
+      {!loading && purchaseReturn && (
+        <div className="purchase-detail">
+          <div className="purchase-detail__meta">
+            <div>
+              <span className="purchase-detail__meta-label">Supplier</span>
+              <span className="purchase-detail__meta-value">
+                {purchaseReturn.party_name || '—'}
+              </span>
+            </div>
+            <div>
+              <span className="purchase-detail__meta-label">Return Date</span>
+              <span className="purchase-detail__meta-value">
+                {new Date(purchaseReturn.return_date).toLocaleDateString('en-IN')}
+              </span>
+            </div>
+            <div>
+              <span className="purchase-detail__meta-label">Original Bill</span>
+              <span className="purchase-detail__meta-value">
+                {purchaseReturn.original_bill_no || '—'}
+              </span>
+            </div>
+            <div>
+              <span className="purchase-detail__meta-label">Return Reason</span>
+              <span className="purchase-detail__meta-value">
+                {purchaseReturn.return_reason || '—'}
+              </span>
+            </div>
+          </div>
+
+          <div className="purchase-detail__table-wrap">
+            <table className="purchase-detail__table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>HSN</th>
+                  <th className="align-right">Qty</th>
+                  <th>Unit</th>
+                  <th className="align-right">Price</th>
+                  <th className="align-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {!items.length && (
+                  <tr>
+                    <td colSpan={6} className="purchase-detail__empty">
+                      No returned items.
+                    </td>
+                  </tr>
+                )}
+                {items.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.item_name}</td>
+                    <td>{item.hsn_code || '—'}</td>
+                    <td className="align-right">{item.quantity}</td>
+                    <td>{item.unit}</td>
+                    <td className="align-right">
+                      {formatCurrency(item.price)}
+                    </td>
+                    <td className="align-right">
+                      {formatCurrency(item.amount)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="purchase-detail__summary">
+            <div className="purchase-detail__summary-row">
+              <span>Taxable Amount</span>
+              <span>{formatCurrency(purchaseReturn.taxable_amount)}</span>
+            </div>
+            <div className="purchase-detail__summary-row">
+              <span>SGST</span>
+              <span>{formatCurrency(purchaseReturn.sgst_total)}</span>
+            </div>
+            <div className="purchase-detail__summary-row">
+              <span>CGST</span>
+              <span>{formatCurrency(purchaseReturn.cgst_total)}</span>
+            </div>
+            <div className="purchase-detail__summary-row">
+              <span>IGST</span>
+              <span>{formatCurrency(purchaseReturn.igst_total)}</span>
+            </div>
+            <div className="purchase-detail__grand">
+              <span>Grand Total</span>
+              <span>{formatCurrency(purchaseReturn.grand_total)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
